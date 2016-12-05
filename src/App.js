@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import BarchartComponent from "./BarchartComponent";
 
 import './App.css';
 
@@ -6,6 +7,9 @@ import './App.css';
 class App extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      data: []
+    };
 
     this.fetchData(100); // 100 = maximum amount of items that can be fetched
   }
@@ -30,7 +34,7 @@ class App extends Component {
   render() {
     return (
       <div>
-        <p>Hello World!</p>
+        <BarchartComponent id="type-overview-chart" data={ this.state.data } />
       </div>
     );
   }
