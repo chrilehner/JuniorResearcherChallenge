@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import BarchartComponent from "./BarchartComponent";
+import StackedBarchartComponent from "./StackedBarchartComponent";
 
 import './App.css';
 
@@ -14,6 +15,58 @@ class App extends Component {
     this.fetchData(100); // 100 = maximum amount of items that can be fetched
   }
 
+  /*
+   Count the unique mutations for each type
+   */
+  countMutationTypes() {
+    let data = this.state.data;
+    let mutationTypes = new Set();
+    let mutationsCounter = new Map();
+
+    for(let i = 0; i < data.length; i++) {
+      const item = data[i];
+
+      if(!mutationsCounter.has(item.type)) {
+        mutationsCounter.set(item.type, 0)
+      }
+
+      if(!mutationTypes.has(item.mutation)) {
+        mutationTypes.add(item.mutation);
+        let value = mutationsCounter.get(item.type);
+        mutationsCounter.set(item.type, value + 1);
+      }
+    }
+
+    let transformedData = [];
+
+    for(let [key, value] of mutationsCounter) {
+      transformedData.push({
+        "type": key,
+        "count": value
+      })
+    }
+
+    return transformedData;
+  }
+
+  mutationsAcrossChromosomes() {
+    let data = this.state.data;
+    let chromosomes = new Map();
+
+    for(let i = 0; i < data.length; i++) {
+      const item = data[i];
+
+      if(!chromosomes.has(item.chromosome)) {
+        chromosomes.set(item.chromosome, new Map());
+      }
+
+
+
+
+    }
+  }
+
+
   fetchData(batchSize) {
     const options = {
       mode: "cors"
@@ -26,7 +79,6 @@ class App extends Component {
       .then((response) => {
         return response.json();
       }).then((data) => {
-        console.log(data);
         this.setState( { data: data.hits } );
     });
   }
@@ -34,7 +86,8 @@ class App extends Component {
   render() {
     return (
       <div>
-        <BarchartComponent id="type-overview-chart" data={ this.state.data } />
+        <BarchartComponent id="type-overview-chart" data={ this.countMutationTypes(this.state.data) } />
+        <StackedBarchartComponent id="type-overview-chart" data={ this.countMutationTypes(this.state.data) } />
       </div>
     );
   }
