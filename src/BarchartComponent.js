@@ -56,7 +56,8 @@ class BarchartComponent extends Component {
         return `translate(
           ${ xScale(d.type) }, 0
          )`;
-      });
+      })
+      .attr("fill", "tomato");
 
     return null;
   }

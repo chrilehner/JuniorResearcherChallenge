@@ -50,20 +50,60 @@ class App extends Component {
   }
 
   mutationsAcrossChromosomes() {
-    let data = this.state.data;
+    const data = this.state.data;
+    const mutationTypes = this.getMutationTypes();
     let chromosomes = new Map();
 
     for(let i = 0; i < data.length; i++) {
       const item = data[i];
 
+
       if(!chromosomes.has(item.chromosome)) {
-        chromosomes.set(item.chromosome, new Map());
+        chromosomes.set(item.chromosome, {});
+        chromosomes.get(item.chromosome)["chromosome"] = item.chromosome;
+        chromosomes.get(item.chromosome)["total"] = 0;
+
+        mutationTypes.forEach((type) => {
+          chromosomes.get(item.chromosome)[type] = 0;
+        });
       }
 
-
-
-
+      chromosomes.get(item.chromosome)[item.mutation] += 1;
+      chromosomes.get(item.chromosome)["total"] += 1;
     }
+
+    // compute fraction of mutations in chromosomes
+    chromosomes.forEach((obj) => {
+      for(let key in obj) {
+        if(key !== "total" && key !== "chromosome") {
+          obj[key] /= obj["total"];
+        }
+      }
+    });
+
+    return chromosomes;
+  }
+
+  getMutationTypes() {
+    let data = this.state.data;
+    let mutationTypes = new Set();
+
+    for(let i = 0; i < data.length; i++) {
+      mutationTypes.add(data[i].mutation);
+    }
+
+    return mutationTypes;
+  }
+
+  getChromosomes() {
+    let data = this.state.data;
+    let chromosomes = new Set();
+
+    for(let i = 0; i < data.length; i++) {
+      chromosomes.add(data[i].chromosome);
+    }
+
+    return chromosomes;
   }
 
 
@@ -86,8 +126,8 @@ class App extends Component {
   render() {
     return (
       <div>
-        <BarchartComponent id="type-overview-chart" data={ this.countMutationTypes(this.state.data) } />
-        <StackedBarchartComponent id="type-overview-chart" data={ this.countMutationTypes(this.state.data) } />
+        <BarchartComponent id="type-overview-chart" data={ this.countMutationTypes() } />
+        <StackedBarchartComponent id="chromosome-overview-chart" data={ this.mutationsAcrossChromosomes() } mutations={ this.getMutationTypes() } chromosomes={ this.getChromosomes() } />
       </div>
     );
   }
