@@ -10,7 +10,8 @@ class App extends Component {
     super(props);
     this.state = {
       data: [],
-      mutationTypes: []
+      mutationTypes: [],
+      chromosomes: new Map()
     };
 
     this.fetchData(100); // 100 = maximum amount of items that can be fetched
@@ -25,12 +26,12 @@ class App extends Component {
     let mutationTypes = new Set();
     let mutationsCounter = new Map();
 
+    if(filter) {
+      data = filter(data);
+    }
+
     for(let i = 0; i < data.length; i++) {
       const item = data[i];
-
-      if(filter && filter !== item.type) {
-        continue;
-      }
 
       if(!mutationsCounter.has(item.type)) {
         mutationsCounter.set(item.type, 0)
@@ -55,9 +56,14 @@ class App extends Component {
     return transformedData;
   }
 
-  mutationsAcrossChromosomes() {
-    const data = this.state.data;
-    const mutationTypes = this.getMutationTypes();
+  mutationsAcrossChromosomes(d, filter) {
+    let data = d || this.state.data;
+
+    if(filter) {
+      data = filter(data);
+    }
+
+    const mutationTypes = this.getMutationTypes(d);
     let chromosomes = new Map();
 
     for(let i = 0; i < data.length; i++) {
@@ -74,8 +80,9 @@ class App extends Component {
         });
       }
 
-      chromosomes.get(item.chromosome)[item.mutation] += 1;
       chromosomes.get(item.chromosome)["total"] += 1;
+
+      chromosomes.get(item.chromosome)[item.mutation] += 1;
     }
 
     // compute fraction of mutations in chromosomes
@@ -90,8 +97,8 @@ class App extends Component {
     return chromosomes;
   }
 
-  getMutationTypes() {
-    let data = this.state.data;
+  getMutationTypes(d) {
+    const data = d || this.state.data;
     let mutationTypes = new Set();
 
     for(let i = 0; i < data.length; i++) {
@@ -101,8 +108,8 @@ class App extends Component {
     return mutationTypes;
   }
 
-  getChromosomes() {
-    let data = this.state.data;
+  getChromosomes(d) {
+    const data = d || this.state.data;
     let chromosomes = new Set();
 
     for(let i = 0; i < data.length; i++) {
@@ -121,34 +128,48 @@ class App extends Component {
       `https://dcc.icgc.org/api/v1/projects/GBM-US/mutations?field=id,mutation,type,chromosome,start,end&size=${batchSize}&order=desc`,
       options
     )
-      .then((response) => {
-        return response.json();
-      }).then((data) => {
-        this.setState( {
-          data: data.hits,
-          mutationTypes: this.countMutationTypes(data.hits)
-        } );
-
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      this.setState( {
+        data: data.hits,
+        mutationTypes: this.countMutationTypes(data.hits),
+        chromosomes: this.mutationsAcrossChromosomes(data.hits)
+      } );
     });
   }
 
-  mutationTypeClicked(type) {
-    console.log(this.countMutationTypes(null, type));
+  clickEvent(cb) {
     this.setState({
-      mutationTypes: this.countMutationTypes(null, type)
+      mutationTypes: this.countMutationTypes(null, cb),
+      chromosomes: this.mutationsAcrossChromosomes(null, cb)
+    });
+  }
+
+  removeFilters() {
+    this.setState({
+      mutationTypes: this.countMutationTypes(),
+      chromosomes: this.mutationsAcrossChromosomes()
     });
   }
 
   render() {
-    let node = document.getElementById("root");
-    while (node.hasChildNodes()) {
-      node.removeChild(node.lastChild);
+    let node = document.getElementById("container");
+
+    if(node) {
+      while (node.childElementCount > 1) {
+        if(node.lastChild.tagName.toLowerCase() !== "button") {
+          node.removeChild(node.lastChild);
+        }
+      }
     }
 
     return (
-      <div>
-        <BarchartComponent id="type-overview-chart" data={ this.state.mutationTypes } click={ this.mutationTypeClicked.bind(this) } />
-        <StackedBarchartComponent id="chromosome-overview-chart" data={ this.mutationsAcrossChromosomes() } mutations={ this.getMutationTypes() } chromosomes={ this.getChromosomes() } />
+      <div id="container">
+        <div><button onClick={ this.removeFilters.bind(this) }>Remove Filters</button></div>
+        <BarchartComponent id="type-overview-chart" data={ this.state.mutationTypes } click={ this.clickEvent.bind(this) } />
+        <StackedBarchartComponent id="chromosome-overview-chart" data={ this.state.chromosomes } mutations={ this.getMutationTypes() } chromosomes={ this.getChromosomes() } click={ this.clickEvent.bind(this) } />
       </div>
     );
   }

@@ -14,8 +14,6 @@ class StackedBarchartComponent extends Component {
     const mutations = [...this.props.mutations];
     const chromosomes = [...this.props.chromosomes];
 
-    console.log(mutations)
-
     const chartWidth = document.documentElement.clientWidth / 2 + 100;
     const chartHeight = document.documentElement.clientHeight * 0.8;
 
@@ -33,7 +31,7 @@ class StackedBarchartComponent extends Component {
     yScale.domain([1, 0]).range([0, height]); // 1 is the maximum number, because it's normalized
     zScale.domain(mutations);
 
-    const svg = d3.select("#root").append("svg")
+    const svg = d3.select("#container").append("svg")
       .attr("class", this.props.id)
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);
@@ -64,7 +62,15 @@ class StackedBarchartComponent extends Component {
         .attr("x", function(d) { return xScale(d.data.chromosome); })
         .attr("y", function(d) { return yScale(d[1]) + margin.top; })
         .attr("height", function(d) { return yScale(d[0]) - yScale(d[1]); })
-        .attr("width", xScale.bandwidth());
+        .attr("width", xScale.bandwidth())
+        .on("click", (d, i) => {
+          this.props.click((data) => {
+            return data.filter((item) => {
+              let chromosome = chromosomes[i];
+              return chromosome === item.chromosome;
+            });
+          });
+        });
 
     const legend = svg.append("g").selectAll(".legend")
       .data(mutations)

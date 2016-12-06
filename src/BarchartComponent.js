@@ -20,15 +20,13 @@ class BarchartComponent extends Component {
       return prev;
     }, []);
 
-    console.log("TYPES", types);
-
     const xScale = d3.scaleBand();
     const yScale = d3.scaleLinear();
 
     xScale.domain(types).range([margin.left, width]).paddingInner(0.1).paddingOuter(0.5);
     yScale.domain([d3.max(mutationsCounter, (d) => { return d.count }), 0]).range([0, height]);
 
-    let svg = d3.select("#root").append("svg")
+    let svg = d3.select("#container").append("svg")
       .attr("class", this.props.id)
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);
@@ -61,7 +59,11 @@ class BarchartComponent extends Component {
       })
       .attr("fill", "tomato")
     .on("click", (d, i) => {
-      this.props.click(d.type);
+      this.props.click((data) => {
+        return data.filter((item) => {
+          return d.type === item.type;
+        });
+      });
     });
 
     return null;
