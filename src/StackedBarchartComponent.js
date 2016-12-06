@@ -14,10 +14,12 @@ class StackedBarchartComponent extends Component {
     const mutations = [...this.props.mutations];
     const chromosomes = [...this.props.chromosomes];
 
-    const chartWidth = document.documentElement.clientWidth / 2;
-    const chartHeight = document.documentElement.clientHeight / 2;
+    console.log(mutations)
 
-    const margin = { top: 20, right: 30, bottom: 30, left: 40} ;
+    const chartWidth = document.documentElement.clientWidth / 2 + 100;
+    const chartHeight = document.documentElement.clientHeight * 0.8;
+
+    const margin = { top: 20, right: 100, bottom: 30, left: 40} ;
     const width = chartWidth - margin.left - margin.right;
     const height = chartHeight - margin.top - margin.bottom;
 
@@ -27,7 +29,7 @@ class StackedBarchartComponent extends Component {
 
     const stack = d3.stack().keys(mutations);
 
-    xScale.domain(chromosomes).range([margin.left, width]).paddingInner(0.1).paddingOuter(0.5);
+    xScale.domain(chromosomes).range([margin.left, width - margin.right]).paddingInner(0.1).paddingOuter(0.5);
     yScale.domain([1, 0]).range([0, height]); // 1 is the maximum number, because it's normalized
     zScale.domain(mutations);
 
@@ -63,6 +65,26 @@ class StackedBarchartComponent extends Component {
         .attr("y", function(d) { return yScale(d[1]) + margin.top; })
         .attr("height", function(d) { return yScale(d[0]) - yScale(d[1]); })
         .attr("width", xScale.bandwidth());
+
+    const legend = svg.append("g").selectAll(".legend")
+      .data(mutations)
+      .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return `translate( -50, ${ margin.top + i * 20 } )`; })
+      .style("font", "10px sans-serif");
+
+    legend.append("rect")
+      .attr("x", width + 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .attr("fill", zScale);
+
+    legend.append("text")
+      .attr("x", width + 44)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .attr("text-anchor", "start")
+      .text(function(d) { return d; });
 
 
     return null;
