@@ -7,8 +7,8 @@ class BarchartComponent extends Component {
 
     const mutationsCounter = this.props.data;
 
-    const chartWidth = document.documentElement.clientWidth / 2;
-    const chartHeight = document.documentElement.clientHeight / 2;
+    const chartWidth = document.documentElement.clientWidth / 2 - 100;
+    const chartHeight = document.documentElement.clientHeight * 0.8;
 
     const margin = { top: 20, right: 30, bottom: 30, left: 40} ;
     const width = chartWidth - margin.left - margin.right;
@@ -19,6 +19,8 @@ class BarchartComponent extends Component {
       prev.push(cur.type);
       return prev;
     }, []);
+
+    console.log("TYPES", types);
 
     const xScale = d3.scaleBand();
     const yScale = d3.scaleLinear();
@@ -57,7 +59,10 @@ class BarchartComponent extends Component {
           ${ xScale(d.type) }, 0
          )`;
       })
-      .attr("fill", "tomato");
+      .attr("fill", "tomato")
+    .on("click", (d, i) => {
+      this.props.click(d.type);
+    });
 
     return null;
   }

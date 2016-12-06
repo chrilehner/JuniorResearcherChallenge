@@ -9,7 +9,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: []
+      data: [],
+      mutationTypes: []
     };
 
     this.fetchData(100); // 100 = maximum amount of items that can be fetched
@@ -18,13 +19,18 @@ class App extends Component {
   /*
    Count the unique mutations for each type
    */
-  countMutationTypes() {
-    let data = this.state.data;
+  countMutationTypes(d, filter) {
+    let data = d || this.state.data;
+
     let mutationTypes = new Set();
     let mutationsCounter = new Map();
 
     for(let i = 0; i < data.length; i++) {
       const item = data[i];
+
+      if(filter && filter !== item.type) {
+        continue;
+      }
 
       if(!mutationsCounter.has(item.type)) {
         mutationsCounter.set(item.type, 0)
@@ -106,7 +112,6 @@ class App extends Component {
     return chromosomes;
   }
 
-
   fetchData(batchSize) {
     const options = {
       mode: "cors"
@@ -119,14 +124,30 @@ class App extends Component {
       .then((response) => {
         return response.json();
       }).then((data) => {
-        this.setState( { data: data.hits } );
+        this.setState( {
+          data: data.hits,
+          mutationTypes: this.countMutationTypes(data.hits)
+        } );
+
+    });
+  }
+
+  mutationTypeClicked(type) {
+    console.log(this.countMutationTypes(null, type));
+    this.setState({
+      mutationTypes: this.countMutationTypes(null, type)
     });
   }
 
   render() {
+    let node = document.getElementById("root");
+    while (node.hasChildNodes()) {
+      node.removeChild(node.lastChild);
+    }
+
     return (
       <div>
-        <BarchartComponent id="type-overview-chart" data={ this.countMutationTypes() } />
+        <BarchartComponent id="type-overview-chart" data={ this.state.mutationTypes } click={ this.mutationTypeClicked.bind(this) } />
         <StackedBarchartComponent id="chromosome-overview-chart" data={ this.mutationsAcrossChromosomes() } mutations={ this.getMutationTypes() } chromosomes={ this.getChromosomes() } />
       </div>
     );
